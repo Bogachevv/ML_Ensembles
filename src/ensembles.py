@@ -138,7 +138,7 @@ class GradientBoostingMSE:
 
             self.estimators.append(tree)
 
-            S = tree.predict(X) - y
+            S = -self.predict(X) + y
 
             print(f"{i=:3}\t{np.linalg.norm(S)=:.12f}")
 

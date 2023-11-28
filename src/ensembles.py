@@ -50,6 +50,8 @@ class RandomForestMSE:
             raise ValueError('Incorrect feature_subsample_size')
 
         for _ in range(self.n_estimators):
+            idx = np.random.choice(np.arange(X.shape[0]), X.shape[0], replace=True)
+
             tree = DecisionTreeRegressor(
                 criterion='squared_error',
                 splitter='random',
@@ -57,7 +59,7 @@ class RandomForestMSE:
                 max_features=self.feature_subsample_size,
                 random_state=self.random_state,
             )
-            tree.fit(X, y)
+            tree.fit(X[idx], y[idx])
             self.estimators.append(tree)
 
         return self

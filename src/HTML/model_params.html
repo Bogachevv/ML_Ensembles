@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en, ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Ensemble models: params</title>
+</head>
+<body>
+
+<h1>Выбор параметров модели</h1>
+
+<h2>Метод обучения: {{ model_type }} </h2>
+
+<form>
+    <label for="n_estimators">Количество моделей в ансамбле: </label><br>
+    <input type="text" id="n_estimators" name="n_estimators" value="10"><br><br>
+
+    <label for="max_depth">Максимальная глубина дерева: </label><br>
+    <div>
+        <input type="text" id="max_depth" name="max_depth" value="0">
+        <input type="checkbox" id="max_depth_on" name="max_depth_on">
+        <label for="max_depth_on">Использовать ограничение на глубину</label>
+    </div>
+    <br>
+
+    <label for="feature_subsample_size">Объем подвыборки признаков</label>
+    <div>
+        <input type="text" id="feature_subsample_size" name="feature_subsample_size" value="0">
+        <input type="checkbox" id="feature_subsample_size_auto" name="feature_subsample_size_auto" checked>
+        <label for="feature_subsample_size_auto">Автоматический выбор</label>
+    </div>
+    <br>
+
+    <input type="submit" value="Установить параметры" formmethod="post">
+</form>
+
+</body>
+</html>

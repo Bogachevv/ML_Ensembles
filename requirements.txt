@@ -5,4 +5,5 @@ matplotlib
 seaborn
 jupyter
 flask
+flask_bootstrap
 tqdm

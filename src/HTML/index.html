@@ -37,6 +37,11 @@
             show(to_show);
         }
 
+        function lr_visible(visible) {
+            let lr = document.getElementById("learning_rate");
+            lr.disabled = !visible;
+        }
+
         function disable_input(cb, elm_id, inverse){
             let elm = document.getElementById(elm_id)
 
@@ -83,9 +88,11 @@
 
     <form method="post" enctype="multipart/form-data">
         <div class="model_selection">
-            <input type="radio" id="RandomForest" name="model_selection" value="RandomForest" checked>
+            <input type="radio" id="RandomForest" name="model_selection" value="RandomForest" checked
+                   onclick="lr_visible(false)">
             <label for="RandomForest">Случайный лес</label>
-            <input type="radio" id="GradientBoosting" name="model_selection" value="GradientBoosting">
+            <input type="radio" id="GradientBoosting" name="model_selection" value="GradientBoosting"
+                   onclick="lr_visible(true)">
             <label for="GradientBoosting">Градиентный бустинг</label>
             <input type="button" value="Выбрать"
                    onclick="change_layer('model_selection', 'model_params')">
@@ -113,6 +120,10 @@
                 <label for="feature_subsample_size_auto">Автоматический выбор</label>
             </div>
             <br>
+
+            <label for="learning_rate">Шаг обучения: </label><br>
+            <input type="text" id="learning_rate" name="learning_rate" value="0.1" disabled>
+            <br><br>
 
             <input type="button" value="Установить параметры"
                    onclick="change_layer('model_params', 'dataset_loading')">

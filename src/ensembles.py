@@ -142,7 +142,7 @@ class GradientBoostingMSE:
 
             S = -self.predict(X) + y
 
-            # print(f"{i=:3}\t{np.linalg.norm(S)=:.12f}")
+            print(f"{i=:3}\t{np.linalg.norm(S)=:.12f}")
 
     def predict(self, X, estimators_c: int = None):
         """

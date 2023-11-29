@@ -142,9 +142,9 @@ class GradientBoostingMSE:
 
             S = -self.predict(X) + y
 
-            print(f"{i=:3}\t{np.linalg.norm(S)=:.12f}")
+            # print(f"{i=:3}\t{np.linalg.norm(S)=:.12f}")
 
-    def predict(self, X):
+    def predict(self, X, estimators_c: int = None):
         """
         X : numpy ndarray
             Array of size n_objects, n_features
@@ -155,5 +155,7 @@ class GradientBoostingMSE:
             Array of size n_objects
         """
 
-        pred = np.vstack([tree.predict(X) for tree in self.estimators])
+        estimators_c = len(self.estimators) if estimators_c is None else estimators_c
+
+        pred = np.vstack([tree.predict(X) for _, tree in zip(range(estimators_c), self.estimators)])
         return np.sum(pred, axis=0)

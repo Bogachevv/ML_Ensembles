@@ -1,7 +1,7 @@
 import time
 
 from flask import Flask, request, Response
-from flask import render_template, redirect, url_for, jsonify
+from flask import render_template, redirect, url_for, jsonify, abort
 from flask_bootstrap import Bootstrap
 
 app = Flask(__name__, template_folder='HTML')
@@ -11,6 +11,7 @@ Bootstrap(app)
 
 
 MODELS = {}
+DATASETS = {}
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -25,13 +26,25 @@ def model_settings():
     max_depth = request.form['max_depth'] if max_depth_on else None
     feature_subsample_size_auto = ('feature_subsample_size_auto' in request.form)
     feature_subsample_size = request.form['feature_subsample_size'] if not feature_subsample_size_auto else None
+    dataset = request.files['dataset']
+    target_name = request.form['select_target']
 
-    print(model_type, n_estimators, max_depth, max_depth_on, feature_subsample_size, feature_subsample_size_auto,
+    print(model_type, n_estimators, max_depth, max_depth_on, feature_subsample_size, feature_subsample_size_auto, target_name,
           sep='\n')
+
+    print(request.files)
+
+    if dataset.filename == '':
+        abort(400)
 
     print(request.form)
 
-    return redirect(url_for('model', model_no=123))
+    model_no = 0
+
+    # the "uploads" folder needs protection against execution
+    dataset.save(f'uploads/{model_no}_dataset.csv')
+
+    return redirect(url_for('model', model_no=model_no))
 
 
 @app.route('/model/gui', methods=['GET'])

@@ -42,9 +42,46 @@
 
             elm.disabled = (cb.checked !== inverse);
         }
+
+        function enable_submit() {
+            let submit_btn = document.getElementById('submit_btn');
+            submit_btn.disabled = false;
+        }
+
+        function draw_csv_header(features){
+            let dropdown = document.getElementById('select_target');
+
+            dropdown.innerHTML = '';
+
+            features.forEach((option, index) => {
+                let newOption = document.createElement('option');
+                newOption.value = option;
+                newOption.text = option;
+                dropdown.appendChild(newOption);
+            })
+
+            dropdown.disabled = false;
+        }
+
+        function get_csv_header(input_id){
+            console.log(input_id);
+
+            const fileInput = document.getElementById(input_id);
+            let reader = new FileReader();
+
+            reader.onload = function (event) {
+                const contents = event.target.result;
+                const firstLine = contents.split('\n', 1)[0];
+                console.log(firstLine);
+                let features = firstLine.split(',');
+                draw_csv_header(features);
+            }
+
+            reader.readAsText(fileInput.files[0]);
+        }
     </script>
 
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
         <div class="model_selection">
             <input type="radio" id="RandomForest" name="model_selection" value="RandomForest" checked>
             <label for="RandomForest">Случайный лес</label>
@@ -85,10 +122,17 @@
 
         <div class="dataset_loading">
             <h2>Загрузка обучающей выборки</h2>
-            <input type="file" id="dataset" name="dataset"><br><br>
+            <input type="file" id="dataset" name="dataset" accept="text/csv" oninput="get_csv_header('dataset'); enable_submit();">
+            <br><br>
 
             <div>
-                <input type="submit" value="Обучить модель">
+                <label for="select_target">Целевая переменная: </label>
+                <select id="select_target" name="select_target" disabled></select>
+            </div>
+            <br>
+
+            <div>
+                <input type="submit" id="submit_btn" value="Обучить модель" disabled>
                 <input type="button" value="Назад"
                        onclick="change_layer('dataset_loading', 'model_params')">
             </div>

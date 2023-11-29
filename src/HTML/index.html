@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Model settings</title>
+    <style>
+        .model_selection{
+            display: block;
+        }
+        .model_params{
+            display: none;
+        }
+        .dataset_loading{
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        function hide(class_name) {
+            console.log("Hello world");
+            let elms = document.getElementsByClassName(class_name)
+            for (let i = 0; i < elms.length; i++){
+                elms[i].style.display = 'none';
+            }
+        }
+
+        function show(class_name) {
+            let elms = document.getElementsByClassName(class_name)
+            for (let i = 0; i < elms.length; i++){
+                elms[i].style.display = 'block';
+            }
+        }
+
+        function change_layer(to_hide, to_show){
+            hide(to_hide);
+            show(to_show);
+        }
+
+        function disable_input(cb, elm_id, inverse){
+            let elm = document.getElementById(elm_id)
+
+            elm.disabled = (cb.checked !== inverse);
+        }
+    </script>
+
+    <form method="post">
+        <div class="model_selection">
+            <input type="radio" id="RandomForest" name="model_selection" value="RandomForest" checked>
+            <label for="RandomForest">Случайный лес</label>
+            <input type="radio" id="GradientBoosting" name="model_selection" value="GradientBoosting">
+            <label for="GradientBoosting">Градиентный бустинг</label>
+            <input type="button" value="Выбрать"
+                   onclick="change_layer('model_selection', 'model_params')">
+        </div>
+
+        <div class="model_params">
+            <label for="n_estimators">Количество моделей в ансамбле: </label><br>
+            <input type="text" id="n_estimators" name="n_estimators" value="10"><br><br>
+
+            <label for="max_depth">Максимальная глубина дерева: </label><br>
+            <div>
+                <input type="text" id="max_depth" name="max_depth" value="0" disabled>
+                <input type="checkbox" id="max_depth_on" name="max_depth_on"
+                       onclick="disable_input(this, 'max_depth', true)">
+                <label for="max_depth_on">Использовать ограничение на глубину</label>
+            </div>
+            <br>
+
+            <label for="feature_subsample_size">Объем подвыборки признаков</label>
+            <div>
+                <input type="text" id="feature_subsample_size" name="feature_subsample_size" value="0" disabled>
+                <input type="checkbox" id="feature_subsample_size_auto" name="feature_subsample_size_auto"
+                       onclick="disable_input(this, 'feature_subsample_size', false)"
+                       checked>
+                <label for="feature_subsample_size_auto">Автоматический выбор</label>
+            </div>
+            <br>
+
+            <input type="button" value="Установить параметры"
+                   onclick="change_layer('model_params', 'dataset_loading')">
+            <input type="button" value="Назад"
+                   onclick="change_layer('model_params', 'model_selection')">
+        </div>
+
+        <div class="dataset_loading">
+            <h2>Загрузка обучающей выборки</h2>
+            <input type="file" id="dataset" name="dataset"><br><br>
+
+            <div>
+                <input type="submit" value="Обучить модель">
+                <input type="button" value="Назад"
+                       onclick="change_layer('dataset_loading', 'model_params')">
+            </div>
+        </div>
+    </form>
+
+</body>
+</html>

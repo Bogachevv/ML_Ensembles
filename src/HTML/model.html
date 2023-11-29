@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Model</title>
+
+    <style>
+        .fitting{
+            display: block;
+        }
+
+        .model_cp{
+            display: none;
+        }
+    </style>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+
+<script>
+    function hide(class_name) {
+        console.log("Hello world");
+        let elms = document.getElementsByClassName(class_name)
+        for (let i = 0; i < elms.length; i++){
+            elms[i].style.display = 'none';
+        }
+    }
+
+    function show(class_name) {
+        let elms = document.getElementsByClassName(class_name)
+        for (let i = 0; i < elms.length; i++){
+            elms[i].style.display = 'block';
+        }
+    }
+
+    function enable_control_panel() {
+        hide('fitting');
+        show('model_cp');
+    }
+
+    function fit_request(model_no) {
+        console.log('Fit request');
+        let req = new XMLHttpRequest();
+        let req_url = '{{ url_for("model_fit") }}';
+        req_url += "?model_no=" + model_no;
+
+        req.open('GET', req_url, true);
+
+        req.onreadystatechange = function (){
+            if (req.readyState === XMLHttpRequest.DONE){
+                if (req.status === 200){
+                    enable_control_panel();
+                }
+            }
+        }
+
+        req.send();
+    }
+
+    function fit(model_no){
+        let req = new XMLHttpRequest();
+        let req_url = '{{ url_for("get_model_status") }}';
+        req_url += "?model_no=" + model_no;
+        console.log(req_url);
+
+        req.open('GET', req_url , true);
+
+        req.onreadystatechange = function (){
+            if (req.readyState === XMLHttpRequest.DONE){
+                if (req.status === 200){
+                    switch (req.responseText) {
+                        case 'not_fit': return fit_request(model_no);
+                        case 'fit': return enable_control_panel();
+                    }
+                }
+                else{
+                    console.log('Error: ' + req.status);
+                }
+            }
+        }
+
+        req.send();
+    }
+
+    function get_model_no(){
+        const query_url = window.location.search;
+        console.log(query_url);
+        const urlParams = new URLSearchParams(query_url);
+
+        if (urlParams.has('model_no')){
+            return urlParams.get('model_no');
+        }
+        else{
+            Error("Can't get model_no")
+        }
+    }
+</script>
+
+<script>
+    fit(get_model_no());
+</script>
+
+<div class="fitting">
+    <h1>Fitting model...</h1>
+</div>
+
+<div class="model_cp">
+    <h1>Панель управления: </h1>
+</div>
+
+</body>
+</html>

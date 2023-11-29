@@ -64,7 +64,7 @@ class RandomForestMSE:
 
         return self
 
-    def predict(self, X):
+    def predict(self, X, estimators_c: int = None):
         """
         X : numpy ndarray
             Array of size n_objects, n_features
@@ -75,7 +75,9 @@ class RandomForestMSE:
             Array of size n_objects
         """
 
-        pred = np.vstack([tree.predict(X) for tree in self.estimators])
+        estimators_c = self.n_estimators if estimators_c is None else estimators_c
+
+        pred = np.vstack([tree.predict(X) for _, tree in zip(range(estimators_c), self.estimators)])
         return np.mean(pred, axis=0)
 
 

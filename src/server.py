@@ -94,7 +94,7 @@ def model(model_no: int):
     return render_template('model.html', model_no=model_no)
 
 
-@app.route('/model/<int:model_no>/fit', methods=['GET'])
+@app.route('/model/<int:model_no>/api/fit', methods=['POST'])
 def model_fit(model_no: int):
     models = Models()
 
@@ -119,15 +119,35 @@ def model_fit(model_no: int):
 
     models[model_no] = ModelRecord(model=estimator, target=target)
 
-    return 'OK', 200
+    data = {'model_info': {}, 'train_score': -1}
+
+    return jsonify(data)
 
 
-@app.route('/model/<int:model_no>/status', methods=['GET'])
+@app.route('/model/<int:model_no>/api/status', methods=['GET'])
 def get_model_status(model_no: int):
     models = Models()
 
     xml = 'not_fit' if model_no not in models else models[model_no].status
     return Response(xml, mimetype='text/xml'), 200
+
+
+@app.route('/model/<int:model_no>/api/columns_meta', methods=['GET'])
+def get_columns_meta(model_no: int):
+    models = Models()
+
+    if model_no not in models:
+        return abort(404, {'message': f"Can't find model with number {model_no}"})
+
+    path = pathlib.Path(f'uploads/{model_no}_dataset.csv')
+
+    if not path.exists():
+        return abort(404, {'message': f"Can't find file {str(path)}"})
+
+    data = pd.read_csv(path)
+    meta_inf = {col_nm: str(data[col_nm].dtype) for col_nm in data}
+
+    return jsonify(meta_inf)
 
 
 def init_model(model_type, n_estimators, max_depth, feature_subsample_size, learning_rate):

@@ -44,7 +44,7 @@
         let req = new XMLHttpRequest();
         let req_url = '{{ url_for("model_fit", model_no=model_no) }}';
 
-        req.open('GET', req_url, true);
+        req.open('POST', req_url, true);
 
         req.onreadystatechange = function (){
             if (req.readyState === XMLHttpRequest.DONE){
@@ -81,6 +81,36 @@
         req.send();
     }
 
+    function draw_metainfo() {
+        let req = new XMLHttpRequest();
+        let req_url = '{{ url_for("get_columns_meta", model_no=model_no) }}';
+        console.log(req_url);
+
+        req.open('GET', req_url , true);
+
+        req.onreadystatechange = function () {
+            if (req.readyState === XMLHttpRequest.DONE){
+                {#console.log(req.responseText);#}
+
+                let meta_info = JSON.parse(req.responseText);
+
+                let meta_info_tb = document.getElementById("metainfo");
+
+                for (let c_name in meta_info){
+                    console.log(c_name, ': ', meta_info[c_name]);
+
+                    let elm = document.createElement('p');
+                    elm.innerText = c_name + '(' + meta_info[c_name] + ')';
+
+                    meta_info_tb.appendChild(elm);
+                }
+
+            }
+        }
+
+        req.send();
+    }
+
 </script>
 
 <script>
@@ -93,6 +123,10 @@
 
 <div class="model_cp">
     <h1>Панель управления: </h1>
+    <div id="metainfo"></div>
+    <script>
+        draw_metainfo();
+    </script>
 </div>
 
 </body>

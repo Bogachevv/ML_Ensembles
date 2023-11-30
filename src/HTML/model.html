@@ -39,11 +39,10 @@
         show('model_cp');
     }
 
-    function fit_request(model_no) {
+    function fit_request() {
         console.log('Fit request');
         let req = new XMLHttpRequest();
-        let req_url = '{{ url_for("model_fit") }}';
-        req_url += "?model_no=" + model_no;
+        let req_url = '{{ url_for("model_fit", model_no=model_no) }}';
 
         req.open('GET', req_url, true);
 
@@ -58,10 +57,9 @@
         req.send();
     }
 
-    function fit(model_no){
+    function fit(){
         let req = new XMLHttpRequest();
-        let req_url = '{{ url_for("get_model_status") }}';
-        req_url += "?model_no=" + model_no;
+        let req_url = '{{ url_for("get_model_status", model_no=model_no) }}';
         console.log(req_url);
 
         req.open('GET', req_url , true);
@@ -70,7 +68,7 @@
             if (req.readyState === XMLHttpRequest.DONE){
                 if (req.status === 200){
                     switch (req.responseText) {
-                        case 'not_fit': return fit_request(model_no);
+                        case 'not_fit': return fit_request();
                         case 'fit': return enable_control_panel();
                     }
                 }
@@ -83,22 +81,10 @@
         req.send();
     }
 
-    function get_model_no(){
-        const query_url = window.location.search;
-        console.log(query_url);
-        const urlParams = new URLSearchParams(query_url);
-
-        if (urlParams.has('model_no')){
-            return urlParams.get('model_no');
-        }
-        else{
-            Error("Can't get model_no")
-        }
-    }
 </script>
 
 <script>
-    fit(get_model_no());
+    fit();
 </script>
 
 <div class="fitting">

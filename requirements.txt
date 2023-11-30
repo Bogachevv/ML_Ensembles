@@ -8,3 +8,5 @@ jupyter
 flask
 flask_bootstrap
 tqdm
+pydantic
+py-singleton

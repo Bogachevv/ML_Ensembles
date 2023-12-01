@@ -9,6 +9,18 @@
             display: block;
         }
 
+        .main_menu{
+            display: block;
+        }
+
+        .predict{
+            display: none;
+        }
+
+        .validation{
+            display: none;
+        }
+
         .model_cp{
             display: none;
         }
@@ -81,7 +93,7 @@
         req.send();
     }
 
-    function draw_metainfo() {
+    function draw_features_input() {
         let req = new XMLHttpRequest();
         let req_url = '{{ url_for("get_columns_meta", model_no=model_no) }}';
         console.log(req_url);
@@ -94,15 +106,33 @@
 
                 let meta_info = JSON.parse(req.responseText);
 
-                let meta_info_tb = document.getElementById("metainfo");
+                let head = document.getElementById("features_input_head");
+
+                let body = document.getElementById("features_input_body");
+                {#let body_row = document.createElement('tr');#}
 
                 for (let c_name in meta_info){
                     console.log(c_name, ': ', meta_info[c_name]);
 
-                    let elm = document.createElement('p');
-                    elm.innerText = c_name + '(' + meta_info[c_name] + ')';
+                    let tr = document.createElement('tr');
+                    let td_info = document.createElement('td');
 
-                    meta_info_tb.appendChild(elm);
+                    let inf = document.createElement('p');
+
+                    inf.innerText = c_name + ' (' + meta_info[c_name] + '): '
+
+                    let td_input = document.createElement('td');
+
+                    let inp = document.createElement('input');
+
+                    inp.type = 'text';
+                    inp.value = '';
+
+                    td_info.appendChild(inf);
+                    td_input.appendChild(inp);
+                    tr.appendChild(td_info);
+                    tr.appendChild(td_input);
+                    body.appendChild(tr);
                 }
 
             }
@@ -111,22 +141,85 @@
         req.send();
     }
 
+    function to_main_menu() {
+        hide('predict');
+        hide('validation');
+        show('main_menu');
+    }
+
+    function to_predict(){
+        hide('main_menu');
+        show('predict');
+    }
+
+    function to_score(){
+        hide('main_menu');
+        show('validation');
+    }
+
 </script>
 
 <script>
     fit();
 </script>
 
-<div class="fitting">
-    <h1>Fitting model...</h1>
+<h1>Панель управления: </h1>
+
+<div class="main_menu">
+    <div class="fitting">
+        <h1>Fitting model...</h1>
+    </div>
+
+    <div>
+        <h2>Качество модели: </h2><br>
+
+        <input type="button" id="to_predict" value="Предсказать" onclick="to_predict()">
+        <input type="button" id="to_score" value="Валидация" onclick="to_score()">
+    </div>
 </div>
 
-<div class="model_cp">
-    <h1>Панель управления: </h1>
-    <div id="metainfo"></div>
-    <script>
-        draw_metainfo();
-    </script>
+<div class="predict">
+    <div class="model_cp">
+        <div>
+            <table id="features_input">
+                <thead id="features_input_head">
+
+                </thead>
+                <tbody id="features_input_body">
+
+                </tbody>
+            </table>
+        </div>
+
+        <script>
+            draw_features_input();
+        </script>
+    </div>
+
+    <input type="button" onclick="to_main_menu()" value="В меню">
+</div>
+
+<div class="validation">
+    <h1>Валидация</h1>
+
+    <label for="dataset">Валидационная выборка: </label>
+    <input type="file" id="dataset" name="dataset" accept="text/csv" oninput=""><br>
+
+    <div>
+        <table>
+            <tr>
+                <td>MSE: </td>
+                <td><p id="MSE_score"></p></td>
+            </tr>
+            <tr>
+                <td>R2: </td>
+                <td><p id="R2_score"></p></td>
+            </tr>
+        </table>
+    </div>
+
+    <input type="button" value="Рассчитать">
+    <input type="button" onclick="to_main_menu()" value="В меню">
 </div>
 
 </body>

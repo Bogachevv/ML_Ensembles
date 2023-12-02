@@ -151,20 +151,23 @@ def get_columns_meta(model_no: int):
     return jsonify(meta_inf)
 
 
-@app.route('/model/<int:model_no>/api/predict_single', methods=['POST'])
-def predict_single(model_no: int):
+@app.route('/model/<int:model_no>/api/predict', methods=['POST'])
+def predict(model_no: int):
     models = Models()
 
     if model_no not in models:
         return abort(404, {'message': f"Can't find model with number {model_no}"})
 
     features = request.json
-    data = pd.DataFrame(features)
-    estimator = models[model_no].model
 
-    pred = estimator.predict(data)
+    print(f"DEBUG: predict {features=}")
 
-    resp = {models[model_no].target: pred}
+    # data = pd.DataFrame(features)
+    # estimator = models[model_no].model
+    #
+    # pred = estimator.predict(data)
+    #
+    resp = {'target': models[model_no].target, 'value': -1}
 
     return jsonify(resp)
 

@@ -118,23 +118,28 @@
                     console.log(c_name, ': ', meta_info[c_name]);
 
                     let tr = document.createElement('tr');
-                    let td_info = document.createElement('td');
-
-                    let inf = document.createElement('p');
-
-                    inf.innerText = c_name + ' (' + meta_info[c_name] + '): '
-
+                    let td_name = document.createElement('td');
+                    let td_type = document.createElement('td');
                     let td_input = document.createElement('td');
 
-                    let inp = document.createElement('input');
+                    let f_name = document.createElement('p');
+                    let f_type = document.createElement('p');
+                    let f_input = document.createElement('input');
 
-                    inp.type = 'text';
-                    inp.value = '';
+                    f_name.innerText = c_name;
+                    f_type.innerText = meta_info[c_name];
 
-                    td_info.appendChild(inf);
-                    td_input.appendChild(inp);
-                    tr.appendChild(td_info);
+                    f_input.type = 'text';
+                    f_input.value = '';
+
+                    td_name.appendChild(f_name);
+                    td_type.appendChild(f_type);
+                    td_input.appendChild(f_input);
+
+                    tr.appendChild(td_name);
+                    tr.appendChild(td_type);
                     tr.appendChild(td_input);
+
                     body.appendChild(tr);
                 }
 
@@ -160,8 +165,78 @@
         show('validation');
     }
 
-    function predict(){
+    function get_features_json(){
+        const table = document.getElementById('features_input_body');
+        const rows = table.getElementsByTagName('tr');
 
+        let res = {};
+
+        for (let i = 0; i < rows.length; i++){
+            const cells = rows[i].getElementsByTagName('td');
+
+            let f_name = cells[0];
+            let f_type = cells[1];
+            let f_input = cells[2];
+
+            f_name = f_name.getElementsByTagName('p')[0].innerText;
+            f_input = f_input.getElementsByTagName('input')[0].value;
+
+            res[f_name] = f_input;
+        }
+
+        return res;
+    }
+
+    function draw_predict(target, value) {
+        let tbody = document.getElementById('prediction_body');
+
+        {# Clear old prediction #}
+        while (tbody.firstChild){
+            tbody.removeChild(tbody.firstChild);
+        }
+
+        let tr = document.createElement('tr');
+        let td_target = document.createElement('td');
+        let td_value = document.createElement('td');
+
+        let h4_target = document.createElement('h4');
+        let h4_value = document.createElement('h4');
+
+        h4_target.innerText = target;
+        h4_value.innerText = value;
+
+        td_target.appendChild(h4_target);
+        td_value.appendChild(h4_value);
+
+        tr.appendChild(td_target);
+        tr.appendChild(td_value);
+
+        tbody.appendChild(tr);
+    }
+
+    function predict(){
+        let features = get_features_json();
+        console.log(features);
+        features = JSON.stringify(features);
+
+        let url = '{{ url_for("predict", model_no=model_no) }}';
+        let req = new XMLHttpRequest();
+        req.open('POST', url, true);
+        req.setRequestHeader('Content-Type', 'application/json');
+
+        req.onreadystatechange = function (){
+            if (req.readyState === XMLHttpRequest.DONE){
+                if (req.status === 200){
+                    let res_json = JSON.parse(req.responseText);
+                    draw_predict(res_json['target'], res_json['value']);
+                }
+                else{
+                    console.error('Error');
+                }
+            }
+        }
+
+        req.send(features);
     }
 
     function draw_validation_score(results){
@@ -238,16 +313,21 @@
 <div class="predict">
     <div class="model_cp">
         <div>
-            <table id="features_input">
-                <thead id="features_input_head">
+            <form id="predict_form">
+                <table id="features_input">
+                    <thead id="features_input_head">
+                        <tr>
+                            <th>Признак</th>
+                            <th>Тип</th>
+                            <th>Значение</th>
+                        </tr>
+                    </thead>
+                    <tbody id="features_input_body">
 
-                </thead>
-                <tbody id="features_input_body">
-
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </form>
         </div>
-
         <script>
             draw_features_input();
         </script>

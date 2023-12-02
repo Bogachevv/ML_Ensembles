@@ -61,6 +61,9 @@
         req.onreadystatechange = function (){
             if (req.readyState === XMLHttpRequest.DONE){
                 if (req.status === 200){
+                    let fit_data = req.response;
+                    console.log(fit_data);
+
                     enable_control_panel();
                 }
             }
@@ -157,6 +160,60 @@
         show('validation');
     }
 
+    function predict(){
+
+    }
+
+    function draw_validation_score(results){
+        console.log(results);
+
+        let MSE_score = document.getElementById('MSE_score');
+        let R2_score = document.getElementById('R2_score');
+        let score = results['score'];
+
+        MSE_score.innerText = score['MSE'];
+        R2_score.innerText = score['R2'];
+    }
+
+    function clear_validation_score(){
+        let MSE_score = document.getElementById('MSE_score');
+        let R2_score = document.getElementById('R2_score');
+
+        MSE_score.innerText = 'Calculating...';
+        R2_score.innerText = 'Calculating...';
+    }
+
+    function score_validation(){
+        clear_validation_score();
+
+        let ds = document.getElementById('dataset');
+
+        let formData = new FormData();
+        formData.append('dataset', ds.files[0]);
+
+        let req = new XMLHttpRequest();
+        let url = '{{ url_for("validation_score", model_no=model_no) }}';
+
+        req.open('POST', url, true);
+
+        req.onreadystatechange = function (){
+            if (req.readyState === XMLHttpRequest.DONE){
+                if (req.status === 200){
+                    let resp_json = JSON.parse(req.responseText);
+
+                    draw_validation_score(resp_json);
+                }
+                else{
+                    console.error('Validation dataset upload error: ' + req.status);
+                }
+
+            }
+        }
+
+        req.send(formData);
+
+    }
+
 </script>
 
 <script>
@@ -196,14 +253,22 @@
         </script>
     </div>
 
+    <h3>Результат:</h3>
+    <table>
+        <tbody id="prediction_body"></tbody>
+    </table>
+
+    <input type="button" onclick="predict()" value="Рассчитать">
     <input type="button" onclick="to_main_menu()" value="В меню">
 </div>
 
 <div class="validation">
     <h1>Валидация</h1>
 
-    <label for="dataset">Валидационная выборка: </label>
-    <input type="file" id="dataset" name="dataset" accept="text/csv" oninput=""><br>
+    <form method="post" enctype="multipart/form-data" >
+        <label for="dataset">Валидационная выборка: </label>
+        <input type="file" id="dataset" name="dataset" accept="text/csv" oninput=""><br>
+    </form>
 
     <div>
         <table>
@@ -218,7 +283,7 @@
         </table>
     </div>
 
-    <input type="button" value="Рассчитать">
+    <input type="button" value="Рассчитать" onclick="score_validation()">
     <input type="button" onclick="to_main_menu()" value="В меню">
 </div>
 

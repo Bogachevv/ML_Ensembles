@@ -5,6 +5,7 @@ import pathlib
 from pydantic import BaseModel
 from typing import Optional, Union, List, Tuple, Any, Literal
 from py_singleton import singleton
+from collections import OrderedDict
 
 
 from flask import Flask, request, Response
@@ -117,9 +118,9 @@ def model_fit(model_no: int):
 
     estimator.fit(X, y)
 
-    models[model_no] = ModelRecord(model=estimator, target=target)
+    models[model_no] = ModelRecord(model=estimator, target=target, status='fit')
 
-    data = {'model_info': {}, 'train_score': -1}
+    data = {'model_description': {}, 'train_score': {'MSE': -1, 'R2': -1}, 'target': target}
 
     return jsonify(data)
 
@@ -145,9 +146,49 @@ def get_columns_meta(model_no: int):
         return abort(404, {'message': f"Can't find file {str(path)}"})
 
     data = pd.read_csv(path)
-    meta_inf = {col_nm: str(data[col_nm].dtype) for col_nm in data}
+    meta_inf = {col_nm: str(data[col_nm].dtype) for col_nm in data if col_nm != models[model_no].target}
 
     return jsonify(meta_inf)
+
+
+@app.route('/model/<int:model_no>/api/predict_single', methods=['POST'])
+def predict_single(model_no: int):
+    models = Models()
+
+    if model_no not in models:
+        return abort(404, {'message': f"Can't find model with number {model_no}"})
+
+    features = request.json
+    data = pd.DataFrame(features)
+    estimator = models[model_no].model
+
+    pred = estimator.predict(data)
+
+    resp = {models[model_no].target: pred}
+
+    return jsonify(resp)
+
+
+@app.route('/model/<int:model_no>/api/validation_score', methods=['POST'])
+def validation_score(model_no: int):
+    models = Models()
+
+    if model_no not in models:
+        return abort(404, {'message': f"Can't find model with number {model_no}"})
+
+    estimator, target = models[model_no].model, models[model_no].target
+    target = target.strip('"')
+
+    path = pathlib.Path(f'uploads/{model_no}_validation.csv')
+    dataset = request.files['dataset']
+    dataset.save(path)
+
+    if not path.exists():
+        return abort(404, {'message': f"Can't find file {str(path)}"})
+
+    data = {'model_description': {}, 'score': {'MSE': -1, 'R2': -1}, 'target': target}
+
+    return jsonify(data)
 
 
 def init_model(model_type, n_estimators, max_depth, feature_subsample_size, learning_rate):

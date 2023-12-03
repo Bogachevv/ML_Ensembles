@@ -61,15 +61,97 @@
         req.onreadystatechange = function (){
             if (req.readyState === XMLHttpRequest.DONE){
                 if (req.status === 200){
-                    let fit_data = req.response;
+                    let fit_data = JSON.parse(req.responseText);
                     console.log(fit_data);
 
                     enable_control_panel();
+                    draw_train_score(fit_data['train_score']);
+                    draw_description(fit_data['model_description']);
                 }
             }
         }
 
         req.send();
+    }
+
+    function draw_train_score(score){
+        let MSE_score = document.getElementById('MSE_score_train');
+        let R2_score = document.getElementById('R2_score_train');
+
+        MSE_score.innerText = score['MSE'];
+        R2_score.innerText = score['R2'];
+    }
+
+    function draw_description(description){
+        let lines_tags = ['strategy', 'ensembles_cnt', 'max_deep', 'subsample_size', 'learning_rate'];
+        let lines_texts = ['Метод обучения', 'Количество моделей', 'Максимальная глубина', 'Количество признаков', 'Шаг обучения'];
+
+        let tbody = document.getElementById('model_description');
+
+        for (let i = 0; i < lines_tags.length; i++){
+            if (!(lines_tags[i] in description)) continue;
+
+            let row = document.createElement('tr');
+            let descr_text = document.createElement('td');
+            let descr_val = document.createElement('td');
+
+            descr_text.innerText = lines_texts[i] + ': ';
+            descr_val.innerText = description[lines_tags[i]];
+
+            row.appendChild(descr_text);
+            row.appendChild(descr_val);
+            tbody.appendChild(row);
+        }
+    }
+
+    function description_request(){
+        let req = new XMLHttpRequest();
+        let req_url = '{{ url_for("get_model_description", model_no=model_no) }}';
+
+        req.open('GET', req_url, true);
+
+        req.onreadystatechange = function () {
+            if (req.readyState === XMLHttpRequest.DONE){
+                if (req.status === 200){
+                    let descr = JSON.parse(req.responseText);
+                    draw_description(descr);
+                }
+                else{
+                    console.error("Can't get model description");
+                }
+            }
+        }
+
+        req.send();
+    }
+
+    function train_score_request(){
+        let req = new XMLHttpRequest();
+        let req_url = '{{ url_for("get_model_train_score", model_no=model_no) }}';
+
+        req.open('GET', req_url, true);
+
+        req.onreadystatechange = function () {
+            if (req.readyState === XMLHttpRequest.DONE){
+                if (req.status === 200){
+                    let score = JSON.parse(req.responseText);
+                    draw_train_score(score);
+                }
+                else{
+                    console.error("Can't get model train score");
+                }
+            }
+        }
+
+        req.send();
+    }
+
+    function fit_info_request(){
+        console.log('Fit info request');
+        train_score_request();
+        description_request();
+
+        enable_control_panel();
     }
 
     function fit(){
@@ -84,7 +166,7 @@
                 if (req.status === 200){
                     switch (req.responseText) {
                         case 'not_fit': return fit_request();
-                        case 'fit': return enable_control_panel();
+                        case 'fit': return fit_info_request();
                     }
                 }
                 else{
@@ -242,8 +324,8 @@
     function draw_validation_score(results){
         console.log(results);
 
-        let MSE_score = document.getElementById('MSE_score');
-        let R2_score = document.getElementById('R2_score');
+        let MSE_score = document.getElementById('MSE_score_valid');
+        let R2_score = document.getElementById('R2_score_valid');
         let score = results['score'];
 
         MSE_score.innerText = score['MSE'];
@@ -304,6 +386,25 @@
 
     <div>
         <h2>Качество модели: </h2><br>
+        <div>
+            <table>
+                <tr>
+                    <td>MSE: </td>
+                    <td id="MSE_score_train"></td>
+                </tr>
+                <tr>
+                    <td>R2: </td>
+                    <td id="R2_score_train"></td>
+                </tr>
+            </table>
+        </div>
+
+        <div>
+            <h2>Описание модели: </h2>
+            <table>
+                <tbody id="model_description"></tbody>
+            </table>
+        </div>
 
         <input type="button" id="to_predict" value="Предсказать" onclick="to_predict()">
         <input type="button" id="to_score" value="Валидация" onclick="to_score()">
@@ -354,11 +455,11 @@
         <table>
             <tr>
                 <td>MSE: </td>
-                <td><p id="MSE_score"></p></td>
+                <td id="MSE_score_valid"></td>
             </tr>
             <tr>
                 <td>R2: </td>
-                <td><p id="R2_score"></p></td>
+                <td id="R2_score_valid"></td>
             </tr>
         </table>
     </div>

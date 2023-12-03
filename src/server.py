@@ -1,4 +1,7 @@
 import time
+
+import numpy as np
+
 import ensembles
 import pandas as pd
 import pathlib
@@ -22,7 +25,10 @@ class ModelRecord(BaseModel):
     # model: Union[ensembles.RandomForestMSE, ensembles.GradientBoostingMSE]
     model: Any
     target: str
+    meta_info: Any = pd.Series()
+    features: List[str] = list()
     status: Literal['not_fit', 'fit'] = 'not_fit'
+    train_score: dict = dict()
 
 
 @singleton
@@ -114,13 +120,23 @@ def model_fit(model_no: int):
 
     data = pd.read_csv(path)
     y = data[target]
-    X = data.drop(columns=[target]).to_numpy()
+    X = data.drop(columns=[target])
+    meta_info = X.dtypes
+    features = list(X.columns)
+    X = X.to_numpy()
+
+    print(meta_info)
 
     estimator.fit(X, y)
 
-    models[model_no] = ModelRecord(model=estimator, target=target, status='fit')
+    train_score = {'MSE': -1, 'R2': -1}
 
-    data = {'model_description': {}, 'train_score': {'MSE': -1, 'R2': -1}, 'target': target}
+    models[model_no] = ModelRecord(model=estimator, target=target, status='fit',
+                                   meta_info=meta_info, features=features, train_score=train_score)
+
+    description = fill_description(estimator)
+
+    data = {'model_description': description, 'train_score': train_score, 'target': target}
 
     return jsonify(data)
 
@@ -131,6 +147,25 @@ def get_model_status(model_no: int):
 
     xml = 'not_fit' if model_no not in models else models[model_no].status
     return Response(xml, mimetype='text/xml'), 200
+
+
+@app.route('/model/<int:model_no>/api/train_score', methods=['GET'])
+def get_model_train_score(model_no: int):
+    models = Models()
+
+    score = models[model_no].train_score
+
+    return jsonify(score)
+
+
+@app.route('/model/<int:model_no>/api/description', methods=['GET'])
+def get_model_description(model_no: int):
+    models = Models()
+    estimator = models[model_no].model
+
+    description = fill_description(estimator)
+
+    return jsonify(description)
 
 
 @app.route('/model/<int:model_no>/api/columns_meta', methods=['GET'])
@@ -157,17 +192,22 @@ def predict(model_no: int):
 
     if model_no not in models:
         return abort(404, {'message': f"Can't find model with number {model_no}"})
+    model_rec = models[model_no]
 
     features = request.json
 
     print(f"DEBUG: predict {features=}")
 
-    # data = pd.DataFrame(features)
-    # estimator = models[model_no].model
-    #
-    # pred = estimator.predict(data)
-    #
-    resp = {'target': models[model_no].target, 'value': -1}
+    df = pd.DataFrame([features])
+    df = df.astype(model_rec.meta_info)
+    print(df)
+    print(df.dtypes)
+
+    estimator = model_rec.model
+
+    pred = estimator.predict(df.to_numpy())[0]
+
+    resp = {'target': models[model_no].target, 'value': pred}
 
     return jsonify(resp)
 
@@ -192,6 +232,24 @@ def validation_score(model_no: int):
     data = {'model_description': {}, 'score': {'MSE': -1, 'R2': -1}, 'target': target}
 
     return jsonify(data)
+
+
+def fill_description(estimator: Union[ensembles.RandomForestMSE, ensembles.GradientBoostingMSE]) -> dict:
+    strategy = 'RandomForest' if isinstance(estimator, ensembles.RandomForestMSE) else 'GradientBoosting'
+    max_deep = estimator.max_depth if estimator.max_depth is not None else 'unlimited'
+    subsample_size = estimator.feature_subsample_size if estimator.feature_subsample_size is not None else 'auto'
+
+    description = {
+        'strategy': strategy,
+        'ensembles_cnt': estimator.n_estimators,
+        'max_deep': max_deep,
+        'subsample_size': subsample_size,
+    }
+
+    if strategy == 'GradientBoosting':
+        description['learning_rate'] = estimator.learning_rate
+
+    return description
 
 
 def init_model(model_type, n_estimators, max_depth, feature_subsample_size, learning_rate):

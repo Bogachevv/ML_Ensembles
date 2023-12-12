@@ -1,7 +1,8 @@
 import numpy as np
 from scipy.optimize import minimize_scalar
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, r2_score
+from typing import Tuple
 
 
 class RandomForestMSE:
@@ -46,7 +47,11 @@ class RandomForestMSE:
         """
         self.estimators = []
 
-        if self.check_subsample_size and not (0 <= self.feature_subsample_size <= X.shape[1]):
+        if (
+                self.check_subsample_size and
+                (self.feature_subsample_size is not None) and
+                not (0 <= self.feature_subsample_size <= X.shape[1])
+        ):
             raise ValueError('Incorrect feature_subsample_size')
 
         for _ in range(self.n_estimators):
@@ -80,6 +85,16 @@ class RandomForestMSE:
         pred = np.vstack([tree.predict(X) for _, tree in zip(range(estimators_c), self.estimators)])
         return np.mean(pred, axis=0)
 
+    def calc_score(self, X, y, estimators_c: int = None) -> Tuple[float, float]:
+        """
+        :return: MSE, R2
+        """
+        y_pred = self.predict(X, estimators_c)
+        mse_sc = mean_squared_error(y_pred=y_pred, y_true=y)
+        r2_sc = r2_score(y_pred=y_pred, y_true=y)
+
+        return mse_sc, r2_sc
+
 
 class GradientBoostingMSE:
     def __init__(
@@ -110,6 +125,7 @@ class GradientBoostingMSE:
         self.random_state = random_state
 
         self.estimators = []
+        self.alphas = []
 
     def fit(self, X, y, X_val=None, y_val=None):
         """
@@ -122,12 +138,15 @@ class GradientBoostingMSE:
 
         self.estimators = []
 
-        if (self.check_subsample_size
-                and (self.feature_subsample_size is not None)
-                and not (0 <= self.feature_subsample_size <= X.shape[1])):
+        if (
+                self.check_subsample_size and
+                (self.feature_subsample_size is not None) and
+                not (0 <= self.feature_subsample_size <= X.shape[1])
+        ):
             raise ValueError('Incorrect feature_subsample_size')
 
         S = y / self.learning_rate
+        f = np.zeros_like(y, dtype=float)
 
         for i in range(self.n_estimators):
             tree = DecisionTreeRegressor(
@@ -136,11 +155,20 @@ class GradientBoostingMSE:
                 random_state=self.random_state,
                 max_depth=self.max_depth
             )
-            tree.fit(X, self.learning_rate * S)
+            tree.fit(X, S)
+
+            pred = tree.predict(X)
+
+            alpha = minimize_scalar(
+                lambda a: np.sum((y - (f + a * pred)) ** 2)
+            ).x
+
+            f += alpha * self.learning_rate * pred
+
+            S = y - f
 
             self.estimators.append(tree)
-
-            S = -self.predict(X) + y
+            self.alphas.append(alpha)
 
             print(f"{i=:3}\t{np.linalg.norm(S)=:.12f}")
 
@@ -156,6 +184,17 @@ class GradientBoostingMSE:
         """
 
         estimators_c = len(self.estimators) if estimators_c is None else estimators_c
+        est_gen = zip(range(estimators_c), self.estimators, self.alphas)
 
-        pred = np.vstack([tree.predict(X) for _, tree in zip(range(estimators_c), self.estimators)])
+        pred = np.vstack([alpha * self.learning_rate * tree.predict(X) for _, tree, alpha in est_gen])
         return np.sum(pred, axis=0)
+
+    def calc_score(self, X, y, estimators_c: int = None) -> Tuple[float, float]:
+        """
+        :return: MSE, R2
+        """
+        y_pred = self.predict(X, estimators_c)
+        mse_sc = mean_squared_error(y_pred=y_pred, y_true=y)
+        r2_sc = r2_score(y_pred=y_pred, y_true=y)
+
+        return mse_sc, r2_sc

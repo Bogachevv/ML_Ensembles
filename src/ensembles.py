@@ -110,6 +110,7 @@ class GradientBoostingMSE:
         self.random_state = random_state
 
         self.estimators = []
+        self.alphas = []
 
     def fit(self, X, y, X_val=None, y_val=None):
         """
@@ -128,6 +129,7 @@ class GradientBoostingMSE:
             raise ValueError('Incorrect feature_subsample_size')
 
         S = y / self.learning_rate
+        f = np.zeros_like(y, dtype=float)
 
         for i in range(self.n_estimators):
             tree = DecisionTreeRegressor(
@@ -136,13 +138,22 @@ class GradientBoostingMSE:
                 random_state=self.random_state,
                 max_depth=self.max_depth
             )
-            tree.fit(X, self.learning_rate * S)
+            tree.fit(X, S)
+
+            pred = tree.predict(X)
+
+            alpha = minimize_scalar(
+                lambda a: np.sum((y - (f + a * pred)) ** 2)
+            ).x
+
+            f += alpha * self.learning_rate * pred
+
+            S = y - f
 
             self.estimators.append(tree)
+            self.alphas.append(alpha)
 
-            S = -self.predict(X) + y
-
-            # print(f"{i=:3}\t{np.linalg.norm(S)=:.12f}")
+            print(f"{i=:3}\t{np.linalg.norm(S)=:.12f}")
 
     def predict(self, X, estimators_c: int = None):
         """
@@ -156,6 +167,7 @@ class GradientBoostingMSE:
         """
 
         estimators_c = len(self.estimators) if estimators_c is None else estimators_c
+        est_gen = zip(range(estimators_c), self.estimators, self.alphas)
 
-        pred = np.vstack([tree.predict(X) for _, tree in zip(range(estimators_c), self.estimators)])
+        pred = np.vstack([alpha * self.learning_rate * tree.predict(X) for _, tree, alpha in est_gen])
         return np.sum(pred, axis=0)

@@ -1,7 +1,8 @@
 import numpy as np
 from scipy.optimize import minimize_scalar
 from sklearn.tree import DecisionTreeRegressor
-from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_squared_error, r2_score
+from typing import Tuple
 
 
 class RandomForestMSE:
@@ -83,6 +84,16 @@ class RandomForestMSE:
 
         pred = np.vstack([tree.predict(X) for _, tree in zip(range(estimators_c), self.estimators)])
         return np.mean(pred, axis=0)
+
+    def calc_score(self, X, y, estimators_c: int = None) -> Tuple[float, float]:
+        """
+        :return: MSE, R2
+        """
+        y_pred = self.predict(X, estimators_c)
+        mse_sc = mean_squared_error(y_pred=y_pred, y_true=y)
+        r2_sc = r2_score(y_pred=y_pred, y_true=y)
+
+        return mse_sc, r2_sc
 
 
 class GradientBoostingMSE:
@@ -177,3 +188,13 @@ class GradientBoostingMSE:
 
         pred = np.vstack([alpha * self.learning_rate * tree.predict(X) for _, tree, alpha in est_gen])
         return np.sum(pred, axis=0)
+
+    def calc_score(self, X, y, estimators_c: int = None) -> Tuple[float, float]:
+        """
+        :return: MSE, R2
+        """
+        y_pred = self.predict(X, estimators_c)
+        mse_sc = mean_squared_error(y_pred=y_pred, y_true=y)
+        r2_sc = r2_score(y_pred=y_pred, y_true=y)
+
+        return mse_sc, r2_sc

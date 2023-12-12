@@ -46,7 +46,11 @@ class RandomForestMSE:
         """
         self.estimators = []
 
-        if self.check_subsample_size and not (0 <= self.feature_subsample_size <= X.shape[1]):
+        if (
+                self.check_subsample_size and
+                (self.feature_subsample_size is not None) and
+                not (0 <= self.feature_subsample_size <= X.shape[1])
+        ):
             raise ValueError('Incorrect feature_subsample_size')
 
         for _ in range(self.n_estimators):
@@ -123,9 +127,11 @@ class GradientBoostingMSE:
 
         self.estimators = []
 
-        if (self.check_subsample_size
-                and (self.feature_subsample_size is not None)
-                and not (0 <= self.feature_subsample_size <= X.shape[1])):
+        if (
+                self.check_subsample_size and
+                (self.feature_subsample_size is not None) and
+                not (0 <= self.feature_subsample_size <= X.shape[1])
+        ):
             raise ValueError('Incorrect feature_subsample_size')
 
         S = y / self.learning_rate

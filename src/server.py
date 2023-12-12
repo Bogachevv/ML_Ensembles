@@ -129,7 +129,8 @@ def model_fit(model_no: int):
 
     estimator.fit(X, y)
 
-    train_score = {'MSE': -1, 'R2': -1}
+    train_score = estimator.calc_score(X, y)
+    train_score = {'MSE': train_score[0], 'R2': train_score[1]}
 
     models[model_no] = ModelRecord(model=estimator, target=target, status='fit',
                                    meta_info=meta_info, features=features, train_score=train_score)
@@ -229,7 +230,13 @@ def validation_score(model_no: int):
     if not path.exists():
         return abort(404, {'message': f"Can't find file {str(path)}"})
 
-    data = {'model_description': {}, 'score': {'MSE': -1, 'R2': -1}, 'target': target}
+    dataset = pd.read_csv(path)
+    y = dataset[target]
+    X = dataset.drop(columns=[target]).to_numpy()
+
+    score = estimator.calc_score(X, y)
+
+    data = {'model_description': {}, 'score': {'MSE': score[0], 'R2': score[1]}, 'target': target}
 
     return jsonify(data)
 

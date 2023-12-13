@@ -10,3 +10,4 @@ flask_bootstrap
 tqdm
 pydantic
 py-singleton
+waitress

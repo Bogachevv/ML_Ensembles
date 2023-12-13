@@ -312,6 +312,9 @@
                     let res_json = JSON.parse(req.responseText);
                     draw_predict(res_json['target'], res_json['value']);
                 }
+                else if (req.status === 422){
+                    alert("Введенные признаки не соответствуют типам, либо часть признаков пуста");
+                }
                 else{
                     console.error('Error');
                 }

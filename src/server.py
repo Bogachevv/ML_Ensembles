@@ -1,19 +1,14 @@
-import time
-
-import numpy as np
-
 import ensembles
 import pandas as pd
 import pathlib
-from pydantic import BaseModel
 from typing import Optional, Union, List, Tuple, Any, Literal
-from py_singleton import singleton
-from collections import OrderedDict
-
 
 from flask import Flask, request, Response
 from flask import render_template, redirect, url_for, jsonify, abort
 from flask_bootstrap import Bootstrap
+
+from model_storage import ModelRecord, Models
+
 
 app = Flask(__name__, template_folder='HTML')
 app.config['BOOTSTRAP_SERVE_LOCAL'] = True
@@ -21,32 +16,7 @@ app.config['SECRET_KEY'] = 'hello'
 Bootstrap(app)
 
 
-class ModelRecord(BaseModel):
-    # model: Union[ensembles.RandomForestMSE, ensembles.GradientBoostingMSE]
-    model: Any
-    target: str
-    meta_info: Any = pd.Series()
-    features: List[str] = list()
-    status: Literal['not_fit', 'fit'] = 'not_fit'
-    train_score: dict = dict()
-
-
-@singleton
-class Models(object):
-    def __init__(self):
-        self.models = dict()
-
-    def __getitem__(self, item: int) -> ModelRecord:
-        return self.models[item]
-
-    def __setitem__(self, key: int, value: ModelRecord):
-        self.models[key] = value
-
-    def keys(self):
-        return self.models.keys()
-
-    def __contains__(self, item: int):
-        return item in self.models
+# <------ Pages ------>
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -75,23 +45,21 @@ def model_settings():
     except ValueError:
         return abort(400, {'message': f"Can't convert params to numerical type"})
 
-    print(model_type, n_estimators, max_depth, max_depth_on, feature_subsample_size, feature_subsample_size_auto, target_name,
-          sep='\n')
-
-    print(request.files)
-
     if dataset.filename == '':
         abort(400)
-
-    print(request.form)
+    if dataset.filename.rsplit('.', 1)[1].lower() != 'csv':
+        return abort(415, {'message': f"Bad filename format"})
 
     model_no = 0
 
     estimator = init_model(model_type, n_estimators, max_depth, feature_subsample_size, learning_rate)
     models[model_no] = ModelRecord(model=estimator, target=target_name)
 
-    # the "uploads" folder needs protection against execution
-    dataset.save(f'uploads/{model_no}_dataset.csv')
+    try:
+        # the "uploads" folder needs protection against execution
+        dataset.save(f'uploads/{model_no}_dataset.csv')
+    except Exception:
+        return abort(500, {'message': f"Can't save dataset"})
 
     return redirect(url_for('model', model_no=model_no))
 
@@ -99,6 +67,9 @@ def model_settings():
 @app.route('/model/<int:model_no>/gui', methods=['GET'])
 def model(model_no: int):
     return render_template('model.html', model_no=model_no)
+
+
+# <------ API ------>
 
 
 @app.route('/model/<int:model_no>/api/fit', methods=['POST'])
@@ -199,10 +170,13 @@ def predict(model_no: int):
 
     print(f"DEBUG: predict {features=}")
 
-    df = pd.DataFrame([features])
-    df = df.astype(model_rec.meta_info)
-    print(df)
-    print(df.dtypes)
+    try:
+        df = pd.DataFrame([features])
+        df = df.astype(model_rec.meta_info)
+        print(df)
+        print(df.dtypes)
+    except ValueError:
+        return abort(422, {'message': f"Incorrect input type"})
 
     estimator = model_rec.model
 
@@ -275,6 +249,3 @@ def init_model(model_type, n_estimators, max_depth, feature_subsample_size, lear
             feature_subsample_size=feature_subsample_size
         )
         return estimator
-
-# TODO:
-#    implement pd.Df in estimators

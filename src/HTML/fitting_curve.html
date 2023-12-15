@@ -30,12 +30,18 @@
         let estimators_cnt = curve_data['estimators_count'];
         let mse_score = curve_data['score']['MSE'];
         let r2_score = curve_data['score']['R2'];
+        let evaluated_on_test = curve_data['evaluated_on_test'];
 
         Plotly.restyle('mse_chart', 'x', [estimators_cnt]);
         Plotly.restyle('mse_chart', 'y', [mse_score]);
 
         Plotly.restyle('r2_chart', 'x', [estimators_cnt]);
         Plotly.restyle('r2_chart', 'y', [r2_score]);
+
+        if (evaluated_on_test === false){
+            alert('Качество оценивалось на тренировочной выборке, так как объем валидационной выборки был выбран равным 0. \n' +
+                'Полученные данные могут не отображать качество модели.');
+        }
     }
 
     function update_score_request(){

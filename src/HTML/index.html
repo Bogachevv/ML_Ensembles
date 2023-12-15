@@ -6,12 +6,6 @@
     <!-- Bootstrap CSS -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 
-    <style>
-        /* Additional custom styles */
-        .custom-container {
-            margin-top: 20px;
-        }
-    </style>
 </head>
 <body>
 
@@ -94,6 +88,16 @@
                 <select id="select_target" name="select_target" disabled></select>
             </div>
             <br>
+
+            <div>
+                <div>
+                    <label for="test_size">Объем тестовой выборки: <span id="test_size_vol">25</span>%</label>
+                </div>
+                <div class="form-range w-auto">
+                    <input type="range" id="test_size" name="test_size" min="0" max="100" step="5" value="25"
+                           oninput="show_test_volume(this.value)" onchange="show_test_volume(this.value)">
+                </div>
+            </div>
 
             <div>
                 <button type="submit" class="btn btn-dark" id="submit_btn" disabled>
@@ -179,6 +183,11 @@
         }
 
         reader.readAsText(fileInput.files[0]);
+    }
+
+    function show_test_volume(value){
+        let tb = document.getElementById('test_size_vol');
+        tb.innerText = value;
     }
 </script>
 

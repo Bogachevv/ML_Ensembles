@@ -7,6 +7,7 @@ import pandas as pd
 class ModelRecord(BaseModel):
     model: Any
     target: str
+    test_size: Optional[float] = None
     meta_info: Any = pd.Series()
     features: List[str] = list()
     status: Literal['not_fit', 'fit'] = 'not_fit'

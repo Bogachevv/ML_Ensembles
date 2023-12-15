@@ -2,6 +2,7 @@ import ensembles
 import pandas as pd
 import pathlib
 from typing import Optional, Union, List, Tuple, Any, Literal
+from sklearn.model_selection import train_test_split
 
 from flask import Flask, request, Response
 from flask import render_template, redirect, url_for, jsonify, abort
@@ -36,12 +37,16 @@ def model_settings():
     learning_rate = request.form['learning_rate'] if model_type == 'GradientBoosting' else None
     dataset = request.files['dataset']
     target_name = request.form['select_target']
+    test_size = request.form['test_size'] if 'test_size' in request.form else None
 
     try:
         n_estimators = int(n_estimators)
         max_depth = int(max_depth) if max_depth is not None else None
         feature_subsample_size = int(feature_subsample_size) if feature_subsample_size is not None else None
         learning_rate = float(learning_rate) if model_type == 'GradientBoosting' else None
+        if test_size is not None:
+            test_size = int(test_size)
+            test_size = test_size / 100 if test_size > 0 else None
     except ValueError:
         return abort(400, {'message': f"Can't convert params to numerical type"})
 
@@ -53,7 +58,7 @@ def model_settings():
     model_no = 0
 
     estimator = init_model(model_type, n_estimators, max_depth, feature_subsample_size, learning_rate)
-    models[model_no] = ModelRecord(model=estimator, target=target_name)
+    models[model_no] = ModelRecord(model=estimator, target=target_name, test_size=test_size)
 
     try:
         # the "uploads" folder needs protection against execution
@@ -91,7 +96,7 @@ def model_fit(model_no: int):
 
     models[model_no].status = 'fitting'
 
-    estimator, target = models[model_no].model, models[model_no].target
+    estimator, target, test_size = models[model_no].model, models[model_no].target, models[model_no].test_size
     target = target.strip('"')
 
     path = pathlib.Path(f'uploads/{model_no}_dataset.csv')
@@ -105,17 +110,24 @@ def model_fit(model_no: int):
     meta_info = X.dtypes
     features = list(X.columns)
     X = X.to_numpy()
+    y = y.to_numpy()
 
     print(meta_info)
 
-    estimator.fit(X, y)
+    if test_size is not None:
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size)
+        estimator.fit(X_train, y_train)
+        train_score = estimator.calc_score(X_test, y_test)
+    else:
+        estimator.fit(X, y)
+        train_score = estimator.calc_score(X, y)
 
-    train_score = estimator.calc_score(X, y)
-    train_score = {'MSE': train_score[0], 'R2': train_score[1]}
+    evaluated_on_test = (test_size is not None)
+    train_score = {'MSE': train_score[0], 'R2': train_score[1], 'evaluated_on_test': evaluated_on_test}
 
     estimators_sp, mse_sp, rs2_sp = estimator.get_fit_curve(X, y)
 
-    models[model_no] = ModelRecord(model=estimator, target=target, status='fit',
+    models[model_no] = ModelRecord(model=estimator, target=target, test_size=test_size, status='fit',
                                    meta_info=meta_info, features=features, train_score=train_score,
                                    fit_curve=(estimators_sp, mse_sp, rs2_sp)
                                    )
@@ -236,7 +248,7 @@ def get_fitting_curve(model_no: int):
     if model_no not in models:
         return abort(404, {'message': f"Can't find model with number {model_no}"})
 
-    fit_curve = models[model_no].fit_curve
+    fit_curve, test_size = models[model_no].fit_curve, models[model_no].test_size
 
     estimators_sp, mse_sp, rs2_sp = fit_curve
     estimators_sp = list(map(int, estimators_sp))
@@ -245,11 +257,13 @@ def get_fitting_curve(model_no: int):
 
     print(estimators_sp, mse_sp, rs2_sp)
 
+    evaluated_on_test = (test_size is not None)
     data = {'estimators_count': estimators_sp,
             'score': {
                 'MSE': mse_sp,
-                'R2': rs2_sp,
-            }}
+                'R2': rs2_sp},
+            'evaluated_on_test': evaluated_on_test,
+            }
 
     return jsonify(data)
 

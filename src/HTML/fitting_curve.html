@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Fitting curve</title>
+    <!-- Bootstrap CSS CDN -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
@@ -71,36 +73,47 @@
 
 </script>
 
-<div id="chart">
-    <div id="mse_chart" class="">
-        <script>
-            show_chart([], [], 'ensembles count', 'MSE score', 'Fitting curve', 'mse_chart');
-        </script>
-    </div>
-    <div id="r2_chart">
-        <script>
-            show_chart([], [], 'ensembles count', 'R2 score', 'Fitting curve', 'r2_chart');
-        </script>
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-6">
+            <div id="mse_chart" class="mb-4">
+                <script>
+                    show_chart([], [], 'Ensembles Count', 'MSE Score', 'Fitting curve', 'mse_chart');
+                </script>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div id="r2_chart" class="mb-4">
+                <script>
+                    show_chart([], [], 'Ensembles Count', 'R2 Score', 'Fitting curve', 'r2_chart');
+                </script>
+            </div>
+        </div>
     </div>
 
     <script>
         update_score_request();
     </script>
 
-    <div>
-        <label for="mse_chart_vis">Показывать график MSE</label>
-        <input type="checkbox" id="mse_chart_vis" name="mse_chart_vis"
-               onclick="change_chart_visible(this, 'mse_chart')" checked>
-        <br><br>
-
-        <label for="r2_chart_vis">Показывать график R2</label>
-        <input type="checkbox" id="r2_chart_vis" name="r2_chart_vis"
-               onclick="change_chart_visible(this, 'r2_chart')" checked>
-        <br><br>
-
-        <input type="button" id="home" value="В меню" onclick="to_menu()">
+    <div class="mb-4">
+        <div class="form-check form-switch">
+            <input type="checkbox" class="form-check-input" role="switch" id="mse_chart_vis" name="mse_chart_vis"
+                   onclick="change_chart_visible(this, 'mse_chart')" checked>
+            <label class="form-check-label" for="mse_chart_vis">Show MSE Chart</label>
+        </div>
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="r2_chart_vis" name="r2_chart_vis"
+                   onclick="change_chart_visible(this, 'r2_chart')" checked>
+            <label class="form-check-label" for="r2_chart_vis">Show R2 Chart</label>
+        </div>
+        <button type="button" class="btn btn-dark mt-3" onclick="to_menu()">Go to Menu</button>
     </div>
 </div>
+
+<!-- Bootstrap JS and Popper.js CDN (required for some Bootstrap components) -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 </body>
 </html>

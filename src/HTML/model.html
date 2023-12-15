@@ -3,29 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <title>Model</title>
-
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        .fitting{
+        .fitting,
+        .main_menu,
+        .predict,
+        .validation,
+        .model_cp {
+            display: none;
+        }
+
+        .fitting,
+        .main_menu {
             display: block;
-        }
-
-        .main_menu{
-            display: block;
-        }
-
-        .predict{
-            display: none;
-        }
-
-        .validation{
-            display: none;
-        }
-
-        .model_cp{
-            display: none;
         }
     </style>
-
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 </head>
 <body>
@@ -98,14 +90,18 @@
             if (!(lines_tags[i] in description)) continue;
 
             let row = document.createElement('tr');
-            let descr_text = document.createElement('td');
-            let descr_val = document.createElement('td');
+            let descr_text_td = document.createElement('td');
+            let descr_val_td = document.createElement('td');
+            let descr_text = document.createElement('h5');
+            let descr_val = document.createElement('h5');
 
             descr_text.innerText = lines_texts[i] + ': ';
             descr_val.innerText = description[lines_tags[i]];
 
-            row.appendChild(descr_text);
-            row.appendChild(descr_val);
+            descr_text_td.appendChild(descr_text);
+            descr_val_td.appendChild(descr_val);
+            row.appendChild(descr_text_td);
+            row.appendChild(descr_val_td);
             tbody.appendChild(row);
         }
     }
@@ -388,103 +384,139 @@
 
 </script>
 
+<!-- Initial function call -->
 <script>
     fit();
 </script>
 
-<h1>Панель управления: </h1>
+<div class="container-fluid">
+    <h1 class="mt-4">Панель управления</h1><br>
 
-<div class="main_menu">
-    <div class="fitting">
-        <h1>Fitting model...</h1>
-    </div>
-
-    <div>
-        <h2>Качество модели: </h2><br>
-        <div>
-            <table>
-                <tr>
-                    <td>MSE: </td>
-                    <td id="MSE_score_train"></td>
-                </tr>
-                <tr>
-                    <td>R2: </td>
-                    <td id="R2_score_train"></td>
-                </tr>
-            </table>
+    <div class="main_menu">
+        <div class="fitting">
+            <h1>Fitting model...</h1>
         </div>
 
         <div>
-            <h2>Описание модели: </h2>
-            <table>
-                <tbody id="model_description"></tbody>
-            </table>
-        </div>
+            <h2>Качество модели: </h2><br>
+            <div>
+                <table>
+                    <tr>
+                        <th scope="row">
+                            <h5>MSE: </h5>
+                        </th>
+                        <td>
+                            <h5 id="MSE_score_train"></h5>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <h5>R2: </h5>
+                        </th>
+                        <td>
+                            <h5 id="R2_score_train"></h5>
+                        </td>
+                    </tr>
+                </table><br>
+            </div>
 
-        <div id="main_menu_buttons">
-            <input type="button" id="to_predict" value="Предсказать" onclick="to_predict()" disabled>
-            <input type="button" id="to_score" value="Валидация" onclick="to_score()" disabled>
-            <input type="button" id="to_fitting_curve" value="Кривые обучения" onclick="to_fitting_curve()" disabled>
+            <div>
+                <h2>Описание модели: </h2>
+                <table>
+                    <tbody id="model_description"></tbody>
+                </table><br>
+            </div>
+
+            <div id="main_menu_buttons">
+                <input type="button" class="btn btn-dark mt-3" id="to_predict" value="Предсказать" onclick="to_predict()" disabled>
+                <input type="button" class="btn btn-dark mt-3" id="to_score" value="Валидация" onclick="to_score()" disabled>
+                <input type="button" class="btn btn-dark mt-3" id="to_fitting_curve" value="Кривые обучения" onclick="to_fitting_curve()" disabled>
+            </div>
         </div>
     </div>
-</div>
 
-<div class="predict">
-    <div class="model_cp">
-        <div>
-            <form id="predict_form">
-                <table id="features_input">
-                    <thead id="features_input_head">
-                        <tr>
-                            <th>Признак</th>
-                            <th>Тип</th>
-                            <th>Значение</th>
-                        </tr>
-                    </thead>
-                    <tbody id="features_input_body">
+    <div class="predict">
+        <div class="model_cp">
+            <div>
+                <form id="predict_form">
+                    <table id="features_input" class="table w-auto">
+                        <thead id="features_input_head" class="thead-light">
+                            <tr>
+                                <th scope="col">Признак</th>
+                                <th scope="col">Тип</th>
+                                <th scope="col">Значение</th>
+                            </tr>
+                        </thead>
+                        <tbody id="features_input_body">
 
-                    </tbody>
-                </table>
-            </form>
+                        </tbody>
+                    </table>
+                </form>
+            </div>
+            <script>
+                draw_features_input();
+            </script>
         </div>
-        <script>
-            draw_features_input();
-        </script>
-    </div>
 
-    <h3>Результат:</h3>
-    <table>
-        <tbody id="prediction_body"></tbody>
-    </table>
-
-    <input type="button" onclick="predict()" value="Рассчитать">
-    <input type="button" onclick="to_main_menu()" value="В меню">
-</div>
-
-<div class="validation">
-    <h1>Валидация</h1>
-
-    <form method="post" enctype="multipart/form-data" >
-        <label for="dataset">Валидационная выборка: </label>
-        <input type="file" id="dataset" name="dataset" accept="text/csv" oninput=""><br>
-    </form>
-
-    <div>
+        <h3>Результат:</h3>
         <table>
-            <tr>
-                <td>MSE: </td>
-                <td id="MSE_score_valid"></td>
-            </tr>
-            <tr>
-                <td>R2: </td>
-                <td id="R2_score_valid"></td>
-            </tr>
+            <tbody id="prediction_body"></tbody>
         </table>
+
+        <input type="button" class="btn btn-dark mt-3" onclick="predict()" value="Рассчитать">
+        <input type="button" class="btn btn-dark mt-3" onclick="to_main_menu()" value="В меню">
+        <div>
+            <h1></h1>
+        </div>
     </div>
 
-    <input type="button" value="Рассчитать" onclick="score_validation()">
-    <input type="button" onclick="to_main_menu()" value="В меню">
+    <div class="validation">
+        <h1>Валидация</h1>
+
+        <form method="post" enctype="multipart/form-data" >
+            <label for="dataset">Валидационная выборка: </label>
+            <input type="file" id="dataset" name="dataset" accept="text/csv" oninput=""><br>
+        </form>
+
+        <div>
+            <table>
+                <tr>
+                    <td>
+                        <h5>
+                            MSE:
+                        </h5>
+                    </td>
+                    <td>
+                        <h5 id="MSE_score_valid">
+
+                        </h5>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <h5>
+                            R2:
+                        </h5>
+                    </td>
+                    <td>
+                        <h5 id="R2_score_valid">
+
+                        </h5>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <input type="button" class="btn btn-dark mt-3" value="Рассчитать" onclick="score_validation()">
+        <input type="button" class="btn btn-dark mt-3" onclick="to_main_menu()" value="В меню">
+    </div>
+
 </div>
+
+<!-- Bootstrap JS CDN -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 </body>
 </html>

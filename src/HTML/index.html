@@ -3,106 +3,47 @@
 <head>
     <meta charset="UTF-8">
     <title>Model settings</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
     <style>
-        .model_selection{
-            display: block;
-        }
-        .model_params{
-            display: none;
-        }
-        .dataset_loading{
-            display: none;
+        /* Additional custom styles */
+        .custom-container {
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <script>
-        function hide(class_name) {
-            console.log("Hello world");
-            let elms = document.getElementsByClassName(class_name)
-            for (let i = 0; i < elms.length; i++){
-                elms[i].style.display = 'none';
-            }
-        }
 
-        function show(class_name) {
-            let elms = document.getElementsByClassName(class_name)
-            for (let i = 0; i < elms.length; i++){
-                elms[i].style.display = 'block';
-            }
-        }
-
-        function change_layer(to_hide, to_show){
-            hide(to_hide);
-            show(to_show);
-        }
-
-        function lr_visible(visible) {
-            let lr = document.getElementById("learning_rate");
-            lr.disabled = !visible;
-        }
-
-        function disable_input(cb, elm_id, inverse){
-            let elm = document.getElementById(elm_id)
-
-            elm.disabled = (cb.checked !== inverse);
-        }
-
-        function enable_submit() {
-            let submit_btn = document.getElementById('submit_btn');
-            submit_btn.disabled = false;
-        }
-
-        function draw_csv_header(features){
-            let dropdown = document.getElementById('select_target');
-
-            dropdown.innerHTML = '';
-
-            features.forEach((option, index) => {
-                let newOption = document.createElement('option');
-                newOption.value = option;
-                newOption.text = option;
-                dropdown.appendChild(newOption);
-            })
-
-            dropdown.disabled = false;
-        }
-
-        function get_csv_header(input_id){
-            console.log(input_id);
-
-            const fileInput = document.getElementById(input_id);
-            let reader = new FileReader();
-
-            reader.onload = function (event) {
-                const contents = event.target.result;
-                const firstLine = contents.split('\n', 1)[0];
-                console.log(firstLine);
-                let features = firstLine.split(',');
-                draw_csv_header(features);
-            }
-
-            reader.readAsText(fileInput.files[0]);
-        }
-    </script>
-
-    <form method="post" enctype="multipart/form-data">
-        <div class="model_selection">
-            <input type="radio" id="RandomForest" name="model_selection" value="RandomForest" checked
+<form method="post" enctype="multipart/form-data">
+    <div class="model_selection container-fluid">
+        <div class="form-check">
+            <input type="radio" id="RandomForest" name="model_selection" value="RandomForest" class="form-check-input" checked
                    onclick="lr_visible(false)">
-            <label for="RandomForest">Случайный лес</label>
-            <input type="radio" id="GradientBoosting" name="model_selection" value="GradientBoosting"
-                   onclick="lr_visible(true)">
-            <label for="GradientBoosting">Градиентный бустинг</label>
-            <input type="button" value="Выбрать"
-                   onclick="change_layer('model_selection', 'model_params')">
+            <label class="form-check-label" for="RandomForest">Случайный лес</label>
         </div>
+        <div class="form-check">
+            <input type="radio" id="GradientBoosting" name="model_selection" value="GradientBoosting" class="form-check-input"
+                   onclick="lr_visible(true)">
+            <label class="form-check-label" for="GradientBoosting">Градиентный бустинг</label>
+        </div>
+        <button type="button" class="btn btn-dark mt-3" onclick="change_layer('model_selection', 'model_params')">Выбрать</button>
+    </div>
 
-        <div class="model_params">
-            <label for="n_estimators">Количество моделей в ансамбле: </label><br>
+    <div class="model_params" style="display: none;">
+        <div class="container-fluid">
+            <label for="n_estimators">
+                <h5>
+                    Количество моделей в ансамбле:
+                </h5>
+            </label><br>
             <input type="text" id="n_estimators" name="n_estimators" value="10"><br><br>
 
-            <label for="max_depth">Максимальная глубина дерева: </label><br>
+            <label for="max_depth">
+                <h5>
+                    Максимальная глубина дерева:
+                </h5>
+            </label><br>
             <div>
                 <input type="text" id="max_depth" name="max_depth" value="0" disabled>
                 <input type="checkbox" id="max_depth_on" name="max_depth_on"
@@ -111,7 +52,11 @@
             </div>
             <br>
 
-            <label for="feature_subsample_size">Объем подвыборки признаков</label>
+            <label for="feature_subsample_size">
+                <h5>
+                    Объем подвыборки признаков
+                </h5>
+            </label>
             <div>
                 <input type="text" id="feature_subsample_size" name="feature_subsample_size" value="0" disabled>
                 <input type="checkbox" id="feature_subsample_size_auto" name="feature_subsample_size_auto"
@@ -121,17 +66,25 @@
             </div>
             <br>
 
-            <label for="learning_rate">Шаг обучения: </label><br>
+            <label for="learning_rate">
+                <h5>
+                    Шаг обучения:
+                </h5>
+            </label><br>
             <input type="text" id="learning_rate" name="learning_rate" value="0.1" disabled>
             <br><br>
 
-            <input type="button" value="Установить параметры"
-                   onclick="change_layer('model_params', 'dataset_loading')">
-            <input type="button" value="Назад"
-                   onclick="change_layer('model_params', 'model_selection')">
+            <button type="button" class="btn btn-dark" onclick="change_layer('model_params', 'dataset_loading')">
+                Установить параметры
+            </button>
+            <button type="button" class="btn btn-dark" onclick="change_layer('model_params', 'model_selection')">
+                Назад
+            </button>
         </div>
+    </div>
 
-        <div class="dataset_loading">
+    <div class="dataset_loading" style="display: none;">
+        <div class="container-fluid">
             <h2>Загрузка обучающей выборки</h2>
             <input type="file" id="dataset" name="dataset" accept="text/csv" oninput="get_csv_header('dataset'); enable_submit();">
             <br><br>
@@ -143,12 +96,91 @@
             <br>
 
             <div>
-                <input type="submit" id="submit_btn" value="Обучить модель" disabled>
-                <input type="button" value="Назад"
-                       onclick="change_layer('dataset_loading', 'model_params')">
+                <button type="submit" class="btn btn-dark" id="submit_btn" disabled>
+                    Обучить модель
+                </button>
+                <button type="button" class="btn btn-dark" onclick="change_layer('dataset_loading', 'model_params')">
+                    Назад
+                </button>
             </div>
         </div>
-    </form>
+    </div>
+
+</form>
+
+<!-- Bootstrap JS and jQuery (optional, for certain components) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    function hide(class_name) {
+        console.log("Hello world");
+        let elms = document.getElementsByClassName(class_name)
+        for (let i = 0; i < elms.length; i++){
+            elms[i].style.display = 'none';
+        }
+    }
+
+    function show(class_name) {
+        let elms = document.getElementsByClassName(class_name)
+        for (let i = 0; i < elms.length; i++){
+            elms[i].style.display = 'block';
+        }
+    }
+
+    function change_layer(to_hide, to_show){
+        hide(to_hide);
+        show(to_show);
+    }
+
+    function lr_visible(visible) {
+        let lr = document.getElementById("learning_rate");
+        lr.disabled = !visible;
+    }
+
+    function disable_input(cb, elm_id, inverse){
+        let elm = document.getElementById(elm_id)
+
+        elm.disabled = (cb.checked !== inverse);
+    }
+
+    function enable_submit() {
+        let submit_btn = document.getElementById('submit_btn');
+        submit_btn.disabled = false;
+    }
+
+    function draw_csv_header(features){
+        let dropdown = document.getElementById('select_target');
+
+        dropdown.innerHTML = '';
+
+        features.forEach((option, index) => {
+            let newOption = document.createElement('option');
+            newOption.value = option;
+            newOption.text = option;
+            dropdown.appendChild(newOption);
+        })
+
+        dropdown.disabled = false;
+    }
+
+    function get_csv_header(input_id){
+        console.log(input_id);
+
+        const fileInput = document.getElementById(input_id);
+        let reader = new FileReader();
+
+        reader.onload = function (event) {
+            const contents = event.target.result;
+            const firstLine = contents.split('\n', 1)[0];
+            console.log(firstLine);
+            let features = firstLine.split(',');
+            draw_csv_header(features);
+        }
+
+        reader.readAsText(fileInput.files[0]);
+    }
+</script>
 
 </body>
 </html>

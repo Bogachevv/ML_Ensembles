@@ -1,4 +1,5 @@
 import numpy as np
+from numpy import ndarray
 from scipy.optimize import minimize_scalar
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.metrics import mean_squared_error, r2_score
@@ -94,6 +95,20 @@ class RandomForestMSE:
         r2_sc = r2_score(y_pred=y_pred, y_true=y)
 
         return mse_sc, r2_sc
+
+    def get_fit_curve(self, X, y) -> Tuple[ndarray, ndarray, ndarray]:
+        pred = np.vstack([tree.predict(X) for tree in self.estimators])
+
+        estimators_sp = np.arange(self.n_estimators) + 1
+        mse_sp = np.zeros_like(estimators_sp, dtype=float)
+        rs2_sp = np.zeros_like(estimators_sp, dtype=float)
+
+        for i in range(self.n_estimators):
+            y_pred = np.mean(pred[0:(i+1), :], axis=0)
+            mse_sp[i] = mean_squared_error(y_pred=y_pred, y_true=y)
+            rs2_sp[i] = r2_score(y_pred=y_pred, y_true=y)
+
+        return estimators_sp, mse_sp, rs2_sp
 
 
 class GradientBoostingMSE:
@@ -198,3 +213,18 @@ class GradientBoostingMSE:
         r2_sc = r2_score(y_pred=y_pred, y_true=y)
 
         return mse_sc, r2_sc
+
+    def get_fit_curve(self, X, y) -> Tuple[ndarray, ndarray, ndarray]:
+        est_gen = zip(self.estimators, self.alphas)
+        pred = np.vstack([alpha * self.learning_rate * tree.predict(X) for tree, alpha in est_gen])
+
+        estimators_sp = np.arange(self.n_estimators) + 1
+        mse_sp = np.zeros_like(estimators_sp, dtype=float)
+        rs2_sp = np.zeros_like(estimators_sp, dtype=float)
+
+        for i in range(self.n_estimators):
+            y_pred = np.sum(pred[0:(i + 1), :], axis=0)
+            mse_sp[i] = mean_squared_error(y_pred=y_pred, y_true=y)
+            rs2_sp[i] = r2_score(y_pred=y_pred, y_true=y)
+
+        return estimators_sp, mse_sp, rs2_sp

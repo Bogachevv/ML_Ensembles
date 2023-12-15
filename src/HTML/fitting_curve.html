@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fitting curve</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+
+<script>
+    function show_chart(xData, yData, xTitle, yTitle, chartTitle, chartName) {
+        const trace = {
+            x: xData,
+            y: yData,
+            type: 'scatter',
+        }
+
+        const layout = {
+            title: chartTitle,
+            xaxis: {'title': xTitle},
+            yaxis: {'title': yTitle},
+        }
+
+        Plotly.newPlot(chartName, [trace], layout);
+    }
+
+    function update_score_charts(curve_data){
+        let estimators_cnt = curve_data['estimators_count'];
+        let mse_score = curve_data['score']['MSE'];
+        let r2_score = curve_data['score']['R2'];
+
+        Plotly.restyle('mse_chart', 'x', [estimators_cnt]);
+        Plotly.restyle('mse_chart', 'y', [mse_score]);
+
+        Plotly.restyle('r2_chart', 'x', [estimators_cnt]);
+        Plotly.restyle('r2_chart', 'y', [r2_score]);
+    }
+
+    function update_score_request(){
+        const url = '{{ url_for("get_fitting_curve", model_no=model_no) }}';
+        let req = new XMLHttpRequest();
+        req.open('GET', url, true);
+
+        req.onreadystatechange = function (){
+            if (req.readyState === XMLHttpRequest.DONE){
+                if (req.status === 200){
+                    let curve_data = JSON.parse(req.responseText);
+                    update_score_charts(curve_data);
+                }
+                else{
+                    console.error("Can't get curve data");
+                }
+            }
+        }
+
+        req.send();
+    }
+
+    function to_menu(){
+        const url = '{{ url_for("model", model_no=model_no) }}'
+
+        window.location.replace(url);
+    }
+
+    function change_chart_visible(checkbox, chartName){
+        let chart = document.getElementById(chartName);
+        let new_visibility = checkbox.checked;
+
+        chart.style.display = new_visibility ? 'block' : 'none';
+    }
+
+</script>
+
+<div id="chart">
+    <div id="mse_chart" class="">
+        <script>
+            show_chart([], [], 'ensembles count', 'MSE score', 'Fitting curve', 'mse_chart');
+        </script>
+    </div>
+    <div id="r2_chart">
+        <script>
+            show_chart([], [], 'ensembles count', 'R2 score', 'Fitting curve', 'r2_chart');
+        </script>
+    </div>
+
+    <script>
+        update_score_request();
+    </script>
+
+    <div>
+        <label for="mse_chart_vis">Показывать график MSE</label>
+        <input type="checkbox" id="mse_chart_vis" name="mse_chart_vis"
+               onclick="change_chart_visible(this, 'mse_chart')" checked>
+        <br><br>
+
+        <label for="r2_chart_vis">Показывать график R2</label>
+        <input type="checkbox" id="r2_chart_vis" name="r2_chart_vis"
+               onclick="change_chart_visible(this, 'r2_chart')" checked>
+        <br><br>
+
+        <input type="button" id="home" value="В меню" onclick="to_menu()">
+    </div>
+</div>
+
+</body>
+</html>

@@ -49,6 +49,12 @@
     function enable_control_panel() {
         hide('fitting');
         show('model_cp');
+
+        let menu_btns = document.getElementById('main_menu_buttons');
+
+        for (let btn of menu_btns.children){
+            btn.disabled = false;
+        }
     }
 
     function fit_request() {
@@ -374,6 +380,12 @@
 
     }
 
+    function to_fitting_curve(){
+        const url = '{{ url_for("fitting_curve", model_no=model_no) }}'
+
+        window.location.replace(url);
+    }
+
 </script>
 
 <script>
@@ -409,8 +421,11 @@
             </table>
         </div>
 
-        <input type="button" id="to_predict" value="Предсказать" onclick="to_predict()">
-        <input type="button" id="to_score" value="Валидация" onclick="to_score()">
+        <div id="main_menu_buttons">
+            <input type="button" id="to_predict" value="Предсказать" onclick="to_predict()" disabled>
+            <input type="button" id="to_score" value="Валидация" onclick="to_score()" disabled>
+            <input type="button" id="to_fitting_curve" value="Кривые обучения" onclick="to_fitting_curve()" disabled>
+        </div>
     </div>
 </div>
 

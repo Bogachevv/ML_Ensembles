@@ -69,6 +69,11 @@ def model(model_no: int):
     return render_template('model.html', model_no=model_no)
 
 
+@app.route('/model/<int:model_no>/fitting_curve', methods=['GET'])
+def fitting_curve(model_no: int):
+    return render_template('fitting_curve.html', model_no=model_no)
+
+
 # <------ API ------>
 
 
@@ -211,6 +216,30 @@ def validation_score(model_no: int):
     score = estimator.calc_score(X, y)
 
     data = {'model_description': {}, 'score': {'MSE': score[0], 'R2': score[1]}, 'target': target}
+
+    return jsonify(data)
+
+
+@app.route('/models/<int:model_no>/api/fitting_curve', methods=['GET'])
+def get_fitting_curve(model_no: int):
+    models = Models()
+
+    if model_no not in models:
+        return abort(404, {'message': f"Can't find model with number {model_no}"})
+
+    estimator = models[model_no].model
+
+    print("NOT IMPLEMENTED")
+
+    ens_cnt = list(range(1, estimator.n_estimators + 1))
+    mse_score = [0] * len(ens_cnt)
+    r2_score = [0.5] * len(ens_cnt)
+
+    data = {'estimators_count': ens_cnt,
+            'score': {
+                'MSE': mse_score,
+                'R2': r2_score,
+            }}
 
     return jsonify(data)
 

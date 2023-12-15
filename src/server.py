@@ -86,6 +86,11 @@ def model_fit(model_no: int):
     if model_no not in models:
         return abort(404, {'message': f"Can't find model with number {model_no}"})
 
+    if models[model_no].status == 'fitting':
+        return abort(409, 'Model is fitting now. Please wait a few minutes and try to get model state')
+
+    models[model_no].status = 'fitting'
+
     estimator, target = models[model_no].model, models[model_no].target
     target = target.strip('"')
 

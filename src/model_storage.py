@@ -11,6 +11,7 @@ class ModelRecord(BaseModel):
     features: List[str] = list()
     status: Literal['not_fit', 'fit'] = 'not_fit'
     train_score: dict = dict()
+    fit_curve: tuple = ()
 
 
 @singleton

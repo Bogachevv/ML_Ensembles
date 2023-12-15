@@ -108,8 +108,12 @@ def model_fit(model_no: int):
     train_score = estimator.calc_score(X, y)
     train_score = {'MSE': train_score[0], 'R2': train_score[1]}
 
+    estimators_sp, mse_sp, rs2_sp = estimator.get_fit_curve(X, y)
+
     models[model_no] = ModelRecord(model=estimator, target=target, status='fit',
-                                   meta_info=meta_info, features=features, train_score=train_score)
+                                   meta_info=meta_info, features=features, train_score=train_score,
+                                   fit_curve=(estimators_sp, mse_sp, rs2_sp)
+                                   )
 
     description = fill_description(estimator)
 
@@ -227,18 +231,19 @@ def get_fitting_curve(model_no: int):
     if model_no not in models:
         return abort(404, {'message': f"Can't find model with number {model_no}"})
 
-    estimator = models[model_no].model
+    fit_curve = models[model_no].fit_curve
 
-    print("NOT IMPLEMENTED")
+    estimators_sp, mse_sp, rs2_sp = fit_curve
+    estimators_sp = list(map(int, estimators_sp))
+    mse_sp = list(map(float, mse_sp))
+    rs2_sp = list(map(float, rs2_sp))
 
-    ens_cnt = list(range(1, estimator.n_estimators + 1))
-    mse_score = [0] * len(ens_cnt)
-    r2_score = [0.5] * len(ens_cnt)
+    print(estimators_sp, mse_sp, rs2_sp)
 
-    data = {'estimators_count': ens_cnt,
+    data = {'estimators_count': estimators_sp,
             'score': {
-                'MSE': mse_score,
-                'R2': r2_score,
+                'MSE': mse_sp,
+                'R2': rs2_sp,
             }}
 
     return jsonify(data)

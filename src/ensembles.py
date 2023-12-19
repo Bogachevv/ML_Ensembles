@@ -185,7 +185,7 @@ class GradientBoostingMSE:
             self.estimators.append(tree)
             self.alphas.append(alpha)
 
-            print(f"{i=:3}\t{np.linalg.norm(S)=:.12f}")
+            # print(f"{i=:3}\t{np.linalg.norm(S)=:.12f}")
 
     def predict(self, X, estimators_c: int = None):
         """

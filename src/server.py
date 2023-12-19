@@ -217,7 +217,10 @@ def predict(model_no: int):
 
     estimator = model_rec.model
 
-    pred = estimator.predict(df.to_numpy())[0]
+    try:
+        pred = estimator.predict(df.to_numpy())[0]
+    except Exception as e:
+        return abort(422, {'message': f'Incorrect input: {e}'})
 
     resp = {'target': models[model_no].target, 'value': pred}
 

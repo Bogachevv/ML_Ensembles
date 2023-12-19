@@ -66,7 +66,7 @@ def model_settings():
     if dataset.filename.rsplit('.', 1)[1].lower() != 'csv':
         return abort(415, {'message': f"Bad filename format"})
 
-    model_no = 0
+    model_no = models.next_model_no()
 
     estimator = init_model(model_type, n_estimators, max_depth, feature_subsample_size, learning_rate)
     models[model_no] = ModelRecord(model=estimator, target=target_name, test_size=test_size)

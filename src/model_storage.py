@@ -31,3 +31,8 @@ class Models(object):
 
     def __contains__(self, item: int):
         return item in self.models
+
+    def next_model_no(self) -> int:
+        if self.models.keys():
+            return max(self.models.keys()) + 1
+        return 0

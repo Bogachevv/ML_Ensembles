@@ -50,6 +50,17 @@ def model_settings():
     except ValueError:
         return abort(400, {'message': f"Can't convert params to numerical type"})
 
+    if n_estimators < 1:
+        return abort(400, {'message': f"n_estimators must be greater than 0"})
+    if (max_depth is not None) and (max_depth < 1):
+        return abort(400, {'message': "max_depth must be greater than 0"})
+    if (feature_subsample_size is not None) and (feature_subsample_size < 1):
+        return abort(400, {'message': "feature_subsample_size must be greater than 0"})
+    if (learning_rate is not None) and (learning_rate <= 0):
+        return abort(400, {'message': "learning_rate must be greater than 0"})
+    if (test_size is not None) and ((test_size < 0) or (test_size > 1)):
+        return abort(400, {'message': "test_size must be in [0, 100] %"})
+
     if dataset.filename == '':
         abort(400)
     if dataset.filename.rsplit('.', 1)[1].lower() != 'csv':
